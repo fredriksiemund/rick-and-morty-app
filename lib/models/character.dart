@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class Character {
   final int id;
   final String name;

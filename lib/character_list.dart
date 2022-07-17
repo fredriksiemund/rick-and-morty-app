@@ -104,8 +104,10 @@ class _CharacterListState extends State<CharacterList> {
                 leading: Image.network(characters[index].image),
                 title: Text(characters[index].name),
                 subtitle: Text(characters[index].species),
-                onTap: () =>
-                    Navigator.of(context).pushNamed('character-details'),
+                onTap: () => Navigator.of(context).pushNamed(
+                  'character-details',
+                  arguments: characters[index],
+                ),
               );
             } else {
               return Padding(
