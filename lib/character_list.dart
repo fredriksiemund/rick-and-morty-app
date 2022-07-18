@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:rick_and_morty_app/character_details.dart';
 import 'package:rick_and_morty_app/models/Character.dart';
 
 class CharacterList extends StatefulWidget {
@@ -17,20 +18,20 @@ class CharacterList extends StatefulWidget {
 }
 
 class _CharacterListState extends State<CharacterList> {
-  final controller = ScrollController();
-  List<Character> characters = [];
-  String nextPage = 'https://rickandmortyapi.com/api/character';
-  bool hasMore = true;
-  bool isLoading = false;
+  final _controller = ScrollController();
+  List<Character> _characters = [];
+  String _nextPage = 'https://rickandmortyapi.com/api/character';
+  bool _hasMore = true;
+  bool _isLoading = false;
 
   Future fetch() async {
-    if (isLoading) return;
+    if (_isLoading) return;
 
     setState(() {
-      isLoading = true;
+      _isLoading = true;
     });
 
-    final url = Uri.parse(nextPage);
+    final url = Uri.parse(_nextPage);
     final res = await http.get(url);
 
     if (res.statusCode == 200) {
@@ -38,15 +39,15 @@ class _CharacterListState extends State<CharacterList> {
       String? nextPageRaw = parsedRes['info']['next'];
       setState(() {
         if (nextPageRaw == null) {
-          hasMore = false;
+          _hasMore = false;
         } else {
-          nextPage = nextPageRaw;
+          _nextPage = nextPageRaw;
         }
 
-        characters.addAll(List<Character>.from(
+        _characters.addAll(List<Character>.from(
             parsedRes['results'].map((entry) => Character.fromJson(entry))));
 
-        isLoading = false;
+        _isLoading = false;
       });
     } else {
       throw Exception('Failed to load character');
@@ -55,10 +56,10 @@ class _CharacterListState extends State<CharacterList> {
 
   Future refresh() async {
     setState(() {
-      characters = [];
-      nextPage = 'https://rickandmortyapi.com/api/character';
-      hasMore = true;
-      isLoading = false;
+      _characters = [];
+      _nextPage = 'https://rickandmortyapi.com/api/character';
+      _hasMore = true;
+      _isLoading = false;
     });
 
     fetch();
@@ -70,8 +71,9 @@ class _CharacterListState extends State<CharacterList> {
 
     fetch();
 
-    controller.addListener(() {
-      if (controller.position.maxScrollExtent == controller.offset && hasMore) {
+    _controller.addListener(() {
+      if (_controller.position.maxScrollExtent == _controller.offset &&
+          _hasMore) {
         fetch();
       }
     });
@@ -79,7 +81,7 @@ class _CharacterListState extends State<CharacterList> {
 
   @override
   void dispose() {
-    controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -92,28 +94,33 @@ class _CharacterListState extends State<CharacterList> {
       body: RefreshIndicator(
         onRefresh: refresh,
         child: ListView.builder(
-          controller: controller,
+          controller: _controller,
           padding: const EdgeInsets.all(16.0),
-          itemCount: characters.length * 2 + 1,
+          itemCount: _characters.length * 2 + 1,
           itemBuilder: (context, i) {
             if (i.isOdd) return const Divider();
 
             final index = i ~/ 2;
-            if (index < characters.length) {
+            if (index < _characters.length) {
               return ListTile(
-                leading: Image.network(characters[index].image),
-                title: Text(characters[index].name),
-                subtitle: Text(characters[index].species),
-                onTap: () => Navigator.of(context).pushNamed(
-                  'character-details',
-                  arguments: characters[index],
+                leading: Image.network(_characters[index].image),
+                title: Text(_characters[index].name),
+                subtitle: Text(_characters[index].species),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CharacterDetails(
+                      title: _characters[index].name,
+                      id: _characters[index].id,
+                    ),
+                  ),
                 ),
               );
             } else {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
-                  child: hasMore
+                  child: _hasMore
                       ? const CircularProgressIndicator()
                       : const Text('No more data to load'),
                 ),
